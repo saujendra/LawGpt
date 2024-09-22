@@ -1,0 +1,66 @@
+import nltk
+from nltk.corpus import wordnet
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+nltk.download('punkt')
+nltk.download('wordnet')
+
+lemmatizer = WordNetLemmatizer()
+
+law_mapping = {
+    "free education": ("Right to Education (RTE) Act", "Section 3, Section 12"),
+    "compulsory education": ("Right to Education (RTE) Act", "Section 3, Section 12"),
+    "university regulation": ("University Grants Commission (UGC) Act", "Section 12, Section 26"),
+    "ragging": ("The Prohibition of Ragging Act", "Various"),
+    "child protection": ("Juvenile Justice Act", "Section 2(35), Section 21"),
+    "teacher education": ("National Council for Teacher Education (NCTE) Act", "Section 12, Section 32"),
+    "technical education": ("AICTE Act", "Section 10, Section 23"),
+    "sexual harassment": ("The Sexual Harassment of Women at Workplace Act", "Section 3, Section 4"),
+    "reservation": ("Central Educational Institutions Reservation Act", "Section 3, Section 4"),
+    "minority education": ("Minority Educational Institutions Act", "Section 10, Section 12"),
+    "disability": ("Persons with Disabilities Act", "Section 26, Section 30"),
+    "medical education": ("Medical Council of India Act", "Section 10, Section 19"),
+    "pharmacy education": ("Pharmacy Act", "Section 10, Section 12"),
+    "medical commission": ("National Medical Commission (NMC) Act", "Section 10, Section 29"),
+    "education policy": ("National Education Policy (NEP)", "Various"),
+    "right to education rules": ("Right to Education Rules", "Rule 8, Rule 10"),
+}
+
+def get_synonyms(word):
+    synonyms = set()
+    for syn in wordnet.synsets(word):
+        for lemma in syn.lemmas():
+            synonyms.add(lemma.name().lower())
+    return synonyms
+
+def preprocess(prompt):
+    tokens = word_tokenize(prompt.lower())
+    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    return set(lemmatized_tokens)
+
+def get_relevant_law(prompt):
+    processed_prompt = preprocess(prompt)
+    for keyword, (law, sections) in law_mapping.items():
+        keyword_tokens = keyword.split()
+        keyword_synonyms = set()
+        
+        for token in keyword_tokens:
+            keyword_synonyms.update(get_synonyms(token))
+            keyword_synonyms.add(token.lower())
+        
+        if processed_prompt.intersection(keyword_synonyms):
+            return f"Relevant Law: {law}\nRelevant Sections: {sections}"
+    
+    return "No relevant law found for the given prompt."
+
+def main():
+    while True:
+        student_prompt = input("Enter your query (or type 'exit' to quit): ")
+        if student_prompt.lower() == 'exit':
+            break
+        output = get_relevant_law(student_prompt)
+        print(output)
+
+if _name_ == "_main_":
+    main()
